@@ -2,6 +2,9 @@ import RPi.GPIO as GPIO
 from time import sleep
 import videostream
 import controller
+import wiringPi
+from threading import Thread
+
 
 GPIO.setmode(GPIO.BCM)
 bit0Pin = 19
@@ -12,34 +15,34 @@ GPIO.setup(bit0Pin, GPIO.IN,pull_up_down=GPIO.PUD_DOWN) # This could be used to 
 GPIO.setup(bit1Pin, GPIO.IN,pull_up_down=GPIO.PUD_DOWN) # This is going to supply the on/off signal
 GPIO.setup(bit2Pin, GPIO.IN,pull_up_down=GPIO.PUD_DOWN) # This could be used to detect a switch
 
-controller.joystick()
-# Output to pin 12. Toggles it on/off every three seconds
+bit0 = GPIO.input(bit0Pin)
+bit1 = GPIO.input(bit1Pin)
+bit2 = GPIO.input(bit2Pin)
+
 
 def main():
     while True:
         # Input from pin 11
-        bit0 = GPIO.input(bit0Pin)
-        bit1 = GPIO.input(bit1Pin)
-        bit2 = GPIO.input(bit2Pin)
 
-        state = bytes(bit0) + bytes(bit1) + bytes(bit2)
-        print(state)
 
-        if bit2 == 0 and bit1 == 0 and bit2 == 0:
+        if bit0 == 0:
             print(" manaul")
-            controller.joystick.joystickControl()
-        elif bit2 == 0 and bit1 == 0 and bit2 == 1:
+            #controller.joystick.joystickControl()
+        else:
+
             print(" Automatic")
-            videostream.vidFeed()
-        elif bit2 == 0 and bit1 == 1 and bit2 == 0:
-            print("Tuin Point")
-        elif bit2 == 0 and bit1 == 1 and bit2 == 1:
-            print(" Salt Point")
+            #videostream.vidFeed()
 
-        sleep(1)
+def checkButton():
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    global bit0
+    global bit1
+    global bit2
+    bit0 = GPIO.input(bit0Pin)
+    bit1 = GPIO.input(bit1Pin)
+    bit2 = GPIO.input(bit2Pin)
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    Thread(target=main()).start()
+    Thread(target=checkButton).start()
